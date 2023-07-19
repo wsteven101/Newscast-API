@@ -69,8 +69,13 @@ stories never change, why not just use an Add() method? The resaon is that betwe
 if a story exists within the cache and adding it to the cache a separate request may already have 
 updated it. Hence the AddOrUpdate() instead of just Add().
 
-Important Note: The cache does not remove any stories. This has been left as a 'to do' but is obviously required
+Important Note 1: The cache is contained in the StoryService class. Therfore it is important
+that it is added to the dependency container as a Singleton.
+
+Important Note 2: The cache does not remove any stories. This has been left as a 'to do' but is obviously required
 for production. Various strategies could be used such as timestamps and removal after a time span expires.
+
+Improvement Suggestion: The cache could be warmed up at startup.
 
 ## Polly Jitter Retry Policy
 
