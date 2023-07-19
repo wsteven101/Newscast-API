@@ -1,4 +1,4 @@
-# Newscast API Application
+# Newscast WebAPI Application
 
 ## Requirements
 
@@ -35,15 +35,17 @@ The solution presented here is called "Newscast API" and is a .NET 7.0 Solution 
 providing a single endpoint. This endpoint returns the best N stories from the Hacker News API :
 
      'http://localhost:5118/api/stories/' +  the number of stories to be returned
-	 e.g. 'http://localhost:5118/api/stories/20 - returns the best 20 stories in descending order of ranking
+	 e.g. 'http://localhost:5118/api/stories/20 - returns the best 20 stories in descending order of score
 	 
-Managing the Impact of Requests on the Hacker News API
+## Managing the Impact of Requests on the Hacker News API
 
-Two hundred best stories have to be retieved at a time in order to sort them into descending order of score 
-ranking. This requires 200 requests to teh Hacker New API.
+Having fetched the list of the bets 200 story ids, the 200 individual stories are then retrieved.
+This requires 200 requests to the Hacker New API to retieve each of the best stories as the score is
+contained within the story. Only with these scores can the stories be sorted into descending score order.
 
-A balance is required between having too many requests impacting the Hacker News API and between waiting
-for too many synchronous requests that would slow down the Newscast API. this balance is achieved by 
+A balance is required between having too many requests impacting the Hacker News API at once and between waiting
+for too many requests one after the other that would slow down the Newscast API. 
+This balance is achieved by 
 
  1) Breaking the 200 story requests into configurable batches of requests and then awaiting each batch
  2) Caching stories in a concurrent dictionary. An assumption is made here that a story never changes.
@@ -52,31 +54,35 @@ for too many synchronous requests that would slow down the Newscast API. this ba
 ## Story Fetch Batches
 
 When retrieving the stories behnd the retrieved list of 200 best stories the 200 stories are split into batches.
-This is to try and avoid overwhelmng the Hacker News API.
+This is to try and avoid overwhelmng the Hacker News API with too many requests at once.
 
 The batch size is configurable and is set within the appsettings file. 
-Within the project it is set to a batch size of 40. 
+Within the project it is currently set to a batch size of 40. 
 
 ## Caching
 
-A concurrentDictionary keyed by story identifier provides the cache. It is added to with an AddOrUpdate()
-method. As the assumption has been made that stories never change why not just use an Add() method. The
-resaon is that after checking to see if a story is within the cache and before adding it to the cache a
-separate request may already have updated it. Hence the AddOrUpdate().
+A ConcurrentDictionary keyed by story identifier provides the cache. A concurrent dictionary is used to 
+perform atomic operations given that multiple requests could be using the cache at any one time.
 
-Important Note: The cache does not remove any stories. This has been left 'to do' but is obviously required
+The ConcurrentDictionary is added to with an AddOrUpdate() method. As the assumption has been made that 
+stories never change, why not just use an Add() method? The resaon is that between checking to see 
+if a story exists within the cache and adding it to the cache a separate request may already have 
+updated it. Hence the AddOrUpdate() instead of just Add().
+
+Important Note: The cache does not remove any stories. This has been left as a 'to do' but is obviously required
 for production. Various strategies could be used such as timestamps and removal after a time span expires.
 
 ## Polly Jitter Retry Policy
 
 If the Hacker News API becomes overwhelmed with requests and becomes unresponsive or faults and is 
-overwhelmed by requests waiting for the server o come back up then the server will use a 
-Polly Jitter backoff statregy to avoid contributing to overloading the Hacker News API.  
+overwhelmed by requests as it comes back online then the server will use a Polly Jitter retry and backoff 
+statregy to avoid contributing to overloading the Hacker News API. The Jitter part of the policy adds 
+randomness to the backoff time before retrying a request.
 
 ## HttpClientFactory
 
-The HttpClientFactory is used for accessing HttpClient objects to provide a central place for Poll Retry Policy
-configuration and to avoid socket exhaustion.
+The HttpClientFactory is used for accessing HttpClient objects to provide a central location for the
+Polly Retry Policy configuration and to avoid socket exhaustion.
 
 ## Swagger
 
