@@ -90,9 +90,13 @@ A swagger UI is hosted on  http://localhost:5118/index.html .
 
 ## Running the Newscast API with Swagger
 
-Clone the C# Solution
+Clone the C# Solution 
+
+    git clone https://github.com/wsteven101/Newscast-API.git
 
 Change to the Solution directory
+
+  cd Newscast-API/
 
 On the command line type:
 
@@ -108,9 +112,13 @@ Select "Execute" and the results will be returned within a window in the browser
 
 ## Running the Newscast API with Swagger
 
-Clone the C# Solution
+Clone the C# Solution 
+
+    git clone https://github.com/wsteven101/Newscast-API.git
 
 Change to the Solution directory
+
+  cd Newscast-API/
 
 On the command line type:
 
